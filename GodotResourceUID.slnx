@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="GodotResourceUID.Tests/GodotResourceUID.Tests.csproj" />
+  <Project Path="GodotResourceUID/GodotResourceUID.csproj" />
+</Solution>
