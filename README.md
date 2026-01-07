@@ -1,3 +1,5 @@
+[![NuGet Version](https://img.shields.io/nuget/v/xiSage.GodotResourceUID)](https://www.nuget.org/packages/xiSage.GodotResourceUID)
+
 # GodotResourceUID
 
 A C# library for handling Godot's Unique ID (UID) system, providing conversion between UID text format and numeric IDs, as well as UID-to-path mapping functionality.
