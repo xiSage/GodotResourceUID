@@ -7,17 +7,17 @@ namespace GodotResourceUID
     public class ResourceUID
     {
         public const long INVALID_ID = -1;
-        
+
         // Character mapping table, consistent with C++ implementation
         private static readonly char[] uuid_characters = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', '0', '1', '2', '3', '4', '5', '6', '7', '8' };
         private static readonly uint uuid_characters_element_count = (uint)uuid_characters.Length;
         private const uint char_count = (uint)('z' - 'a');
         private const uint base_value = char_count + (uint)('9' - '0');
-        
+
         // Internal cache structure
         private readonly Dictionary<long, string> unique_ids = new Dictionary<long, string>();
         private readonly Dictionary<string, long> reverse_cache = new Dictionary<string, long>();
-        
+
         /// <summary>
         /// Convert ID to text format (e.g., uid://d4n4ub6itg400)
         /// </summary>
@@ -29,11 +29,11 @@ namespace GodotResourceUID
             {
                 return "uid://<invalid>";
             }
-            
+
             char[] tmp = new char[13]; // Maximum 13 characters
             uint tmp_size = 0;
             long temp_id = id;
-            
+
             do
             {
                 uint c = (uint)(temp_id % uuid_characters_element_count);
@@ -41,7 +41,7 @@ namespace GodotResourceUID
                 temp_id /= uuid_characters_element_count;
                 ++tmp_size;
             } while (temp_id > 0);
-            
+
             // Build full UID string
             char[] result = new char[6 + tmp_size]; // uid:// + actual ID characters
             result[0] = 'u';
@@ -50,16 +50,16 @@ namespace GodotResourceUID
             result[3] = ':';
             result[4] = '/';
             result[5] = '/';
-            
+
             // Reverse character order because the above loop generates the number backward
             for (uint i = 0; i < tmp_size; ++i)
             {
                 result[6 + i] = tmp[tmp_size - i - 1];
             }
-            
+
             return new string(result);
         }
-        
+
         /// <summary>
         /// Convert text format UID to ID
         /// </summary>
@@ -71,7 +71,7 @@ namespace GodotResourceUID
             {
                 return INVALID_ID;
             }
-            
+
             long uid = 0;
             for (int i = 6; i < text.Length; i++)
             {
@@ -90,10 +90,10 @@ namespace GodotResourceUID
                     return INVALID_ID;
                 }
             }
-            
+
             return uid & 0x7FFFFFFFFFFFFFFF; // Ensure it's positive
         }
-        
+
         /// <summary>
         /// Load UID mapping from cache file
         /// </summary>
@@ -107,23 +107,23 @@ namespace GodotResourceUID
                 {
                     return false;
                 }
-                
+
                 using (BinaryReader reader = new BinaryReader(File.OpenRead(cacheFilePath)))
                 {
                     uint entry_count = reader.ReadUInt32();
-                    
+
                     for (uint i = 0; i < entry_count; i++)
                     {
                         long id = reader.ReadInt64();
                         int len = reader.ReadInt32();
                         byte[] buffer = reader.ReadBytes(len);
                         string path = System.Text.Encoding.UTF8.GetString(buffer);
-                        
+
                         unique_ids[id] = path;
                         reverse_cache[path] = id;
                     }
                 }
-                
+
                 return true;
             }
             catch (Exception)
@@ -131,7 +131,7 @@ namespace GodotResourceUID
                 return false;
             }
         }
-        
+
         /// <summary>
         /// Get path from cache file directly by UID text, without loading the entire cache
         /// </summary>
@@ -145,24 +145,24 @@ namespace GodotResourceUID
             {
                 return string.Empty;
             }
-            
+
             try
             {
                 if (!File.Exists(cacheFilePath))
                 {
                     return string.Empty;
                 }
-                
+
                 using (BinaryReader reader = new BinaryReader(File.OpenRead(cacheFilePath)))
                 {
                     uint entry_count = reader.ReadUInt32();
-                    
+
                     for (uint i = 0; i < entry_count; i++)
                     {
                         long id = reader.ReadInt64();
                         int len = reader.ReadInt32();
                         byte[] buffer = reader.ReadBytes(len);
-                        
+
                         if (id == uid)
                         {
                             return System.Text.Encoding.UTF8.GetString(buffer);
@@ -174,10 +174,10 @@ namespace GodotResourceUID
             {
                 // Ignore exceptions, return empty string
             }
-            
+
             return string.Empty;
         }
-        
+
         /// <summary>
         /// Get path by ID
         /// </summary>
@@ -189,15 +189,10 @@ namespace GodotResourceUID
             {
                 return string.Empty;
             }
-            
-            if (unique_ids.TryGetValue(id, out string path))
-            {
-                return path;
-            }
-            
-            return string.Empty;
+
+            return unique_ids.TryGetValue(id, out string path) ? path : string.Empty;
         }
-        
+
         /// <summary>
         /// Get ID by path
         /// </summary>
@@ -205,14 +200,9 @@ namespace GodotResourceUID
         /// <returns>Corresponding UID, INVALID_ID if not found</returns>
         public long GetPathId(string path)
         {
-            if (reverse_cache.TryGetValue(path, out long id))
-            {
-                return id;
-            }
-            
-            return INVALID_ID;
+            return reverse_cache.TryGetValue(path, out long id) ? id : INVALID_ID;
         }
-        
+
         /// <summary>
         /// Convert UID text to path
         /// </summary>
@@ -223,7 +213,7 @@ namespace GodotResourceUID
             long id = TextToId(uid);
             return GetIdPath(id);
         }
-        
+
         /// <summary>
         /// Ensure returns a path, convert to path if input is UID
         /// </summary>
@@ -231,11 +221,7 @@ namespace GodotResourceUID
         /// <returns>Path</returns>
         public string EnsurePath(string pathOrUid)
         {
-            if (pathOrUid.StartsWith("uid://"))
-            {
-                return UidToPath(pathOrUid);
-            }
-            return pathOrUid;
+            return pathOrUid.StartsWith("uid://") ? UidToPath(pathOrUid) : pathOrUid;
         }
     }
 }
